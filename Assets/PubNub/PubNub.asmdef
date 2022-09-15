@@ -1,0 +1,16 @@
+{
+    "name": "PubNub",
+    "rootNamespace": "",
+    "references": [
+        "GUID:4f1a8f4072f094a3c932fad36dce795b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
