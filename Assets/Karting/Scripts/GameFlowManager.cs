@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.Playables;
 using KartGame.KartSystems;
 using UnityEngine.SceneManagement;
+using System;
+using PubNubAPI;
 
 public enum GameState{Play, Won, Lost}
 
@@ -41,6 +43,8 @@ public class GameFlowManager : MonoBehaviour
     public bool autoFindKarts = true;
     public ArcadeKart playerKart;
 
+    private PubNub pubnub = PubNubConnection.pubnub;
+
     ArcadeKart[] karts;
     ObjectiveManager m_ObjectiveManager;
     TimeManager m_TimeManager;
@@ -48,8 +52,11 @@ public class GameFlowManager : MonoBehaviour
     string m_SceneToLoad;
     float elapsedTimeBeforeEndScene = 0;
 
+    
+
     void Start()
     {
+        InitializePubNub();
         if (autoFindKarts)
         {
             karts = FindObjectsOfType<ArcadeKart>();
@@ -61,7 +68,7 @@ public class GameFlowManager : MonoBehaviour
         }
 
         m_ObjectiveManager = FindObjectOfType<ObjectiveManager>();
-		DebugUtility.HandleErrorIfNullFindObject<ObjectiveManager, GameFlowManager>(m_ObjectiveManager, this);
+        DebugUtility.HandleErrorIfNullFindObject<ObjectiveManager, GameFlowManager>(m_ObjectiveManager, this);
 
         m_TimeManager = FindObjectOfType<TimeManager>();
         DebugUtility.HandleErrorIfNullFindObject<TimeManager, GameFlowManager>(m_TimeManager, this);
@@ -74,7 +81,7 @@ public class GameFlowManager : MonoBehaviour
         m_TimeManager.StopRace();
         foreach (ArcadeKart k in karts)
         {
-			k.SetCanMove(false);
+            k.SetCanMove(false);
         }
 
         //run race countdown animation
@@ -84,31 +91,35 @@ public class GameFlowManager : MonoBehaviour
         StartCoroutine(CountdownThenStartRaceRoutine());
     }
 
-    IEnumerator CountdownThenStartRaceRoutine() {
+    IEnumerator CountdownThenStartRaceRoutine()
+    {
         yield return new WaitForSeconds(3f);
         StartRace();
     }
 
-    void StartRace() {
+    void StartRace()
+    {
         foreach (ArcadeKart k in karts)
         {
-			k.SetCanMove(true);
+            k.SetCanMove(true);
         }
         m_TimeManager.StartRace();
     }
 
-    void ShowRaceCountdownAnimation() {
+    void ShowRaceCountdownAnimation()
+    {
         raceCountdownTrigger.Play();
     }
 
-    IEnumerator ShowObjectivesRoutine() {
+    IEnumerator ShowObjectivesRoutine()
+    {
         while (m_ObjectiveManager.Objectives.Count == 0)
             yield return null;
         yield return new WaitForSecondsRealtime(0.2f);
         for (int i = 0; i < m_ObjectiveManager.Objectives.Count; i++)
         {
-           if (m_ObjectiveManager.Objectives[i].displayMessage)m_ObjectiveManager.Objectives[i].displayMessage.Display();
-           yield return new WaitForSecondsRealtime(1f);
+            if (m_ObjectiveManager.Objectives[i].displayMessage) m_ObjectiveManager.Objectives[i].displayMessage.Display();
+            yield return new WaitForSecondsRealtime(1f);
         }
     }
 
@@ -119,7 +130,7 @@ public class GameFlowManager : MonoBehaviour
         if (gameState != GameState.Play)
         {
             elapsedTimeBeforeEndScene += Time.deltaTime;
-            if(elapsedTimeBeforeEndScene >= endSceneLoadDelay)
+            if (elapsedTimeBeforeEndScene >= endSceneLoadDelay)
             {
 
                 float timeRatio = 1 - (m_TimeLoadEndGameScene - Time.time) / endSceneLoadDelay;
@@ -160,6 +171,7 @@ public class GameFlowManager : MonoBehaviour
         endGameFadeCanvasGroup.gameObject.SetActive(true);
         if (win)
         {
+            Player.Score = Math.Round(m_TimeManager.TotalTime - m_TimeManager.TimeRemaining,2);
             m_SceneToLoad = winSceneName;
             m_TimeLoadEndGameScene = Time.time + endSceneLoadDelay + delayBeforeFadeToBlack;
 
@@ -184,4 +196,20 @@ public class GameFlowManager : MonoBehaviour
             loseDisplayMessage.gameObject.SetActive(true);
         }
     }
+    
+    void InitializePubNub()
+    {
+        // Use this for initialization
+        if (pubnub == null)
+        {
+            PNConfiguration pnConfiguration = new PNConfiguration();
+            pnConfiguration.PublishKey = PubNubConnection.PublishKey;
+            pnConfiguration.SubscribeKey = PubNubConnection.SubscribeKey;
+            PubNubConnection.UserID = SystemInfo.deviceUniqueIdentifier;
+            pnConfiguration.UserId = PubNubConnection.UserID;
+            pnConfiguration.LogVerbosity = PNLogVerbosity.BODY;
+            PubNubConnection.pubnub = new PubNub(pnConfiguration);
+            pubnub = PubNubConnection.pubnub;
+        }
+    }  
 }

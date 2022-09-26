@@ -35,7 +35,7 @@ public class PickupObject : TargetObject
                
         Objective.OnUnregisterPickup(this);
 
-        TimeManager.OnAdjustTime(TimeGained);
+        //TimeManager.OnAdjustTime(TimeGained); //Ignoring due to increasing time when collecting rings.
 
         Destroy(gameObject, collectDuration);
     }

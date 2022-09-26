@@ -20,4 +20,7 @@
     public const string k_ButtonNamePauseMenu               = "Pause Menu";
     public const string k_ButtonNameSubmit                  = "Submit";
     public const string k_ButtonNameCancel                  = "Cancel";
+    public const string PUBNUB_PUBLISH_KEY                  = "PUBLISH_KEY_HERE";
+    public const string PUBNUB_SUBSCRIBE_KEY                = "SUBSCRIBE_KEY_HERE";
+    public const string AVATAR_API_KEY                      = ""; //Necessary if users want a higher API Limit for unauthenticated users.
 }
