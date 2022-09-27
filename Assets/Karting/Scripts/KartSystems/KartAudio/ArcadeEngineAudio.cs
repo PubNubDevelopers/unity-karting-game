@@ -32,6 +32,7 @@ namespace KartGame.KartSystems
         void Awake()
         {
             arcadeKart = GetComponentInParent<ArcadeKart>();
+            AudioListener.volume = 0.2f;
         }
 
         void Update()

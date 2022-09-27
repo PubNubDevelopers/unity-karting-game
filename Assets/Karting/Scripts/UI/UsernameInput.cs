@@ -19,21 +19,27 @@ public class UsernameInput : MonoBehaviour
         startButton = GameObject.Find("StartButton").GetComponent<Button>();
 
         usernameInput.onValueChanged.AddListener(value => ToggleStartButton());
+
+        //Reads in list of words
+        ProfanityFilter.ReadFile(Environment.CurrentDirectory + @"/Data/profanity.txt");
     }
  
     //Enables/Disables the Play (start) button when there is a username entered/not-entered
     public void ToggleStartButton()
     {
         //Cap username at Length of 6.
-        if(string.IsNullOrWhiteSpace(usernameInput.text) || usernameInput.text.Length > 6)
-        {
+        if(string.IsNullOrWhiteSpace(usernameInput.text) || usernameInput.text.Length > 6 )
+        { 
             startButton.interactable = false;
         }
 
         else
         {
             startButton.interactable = true;
-            Player.Username = usernameInput.text;
+
+            //Check for potential profanity. Replace profanity with "*".
+            usernameInput.text = ProfanityFilter.ReplaceProfanity(usernameInput.text);
+            Player.Username = usernameInput.text;         
         }
     }
 }

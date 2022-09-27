@@ -32,9 +32,7 @@ public class Chat : MonoBehaviour
     Transform chatContainer;
     Transform chatScrollContent;
     TMPro.TMP_InputField chatInput;
-    Texture2D profileTexture;
-
-    Texture2D userTexture;
+    Button chatBtn;
 
     //Avatars by Multiavatar: https://multiavatar.com/
     string profileGenerator = $"https://api.multiavatar.com/";
@@ -47,8 +45,9 @@ public class Chat : MonoBehaviour
         chatScrollContent = GetChild(chatCanvas, "ChatContent");
         chatContainer = GetChild(chatCanvas, "ChatEntryContainer");
         chatContainer.gameObject.SetActive(false); //Used as a template to create the other entries.
-        Button chatBtn = chatCanvas.Find("SendChatButton").GetComponent<Button>();
+        chatBtn = chatCanvas.Find("SendChatButton").GetComponent<Button>();
         chatBtn.onClick.AddListener(SendChat);
+        
 
         //Initialize PubNub Object
         PNConfiguration pnConfiguration = new PNConfiguration();
@@ -143,7 +142,11 @@ public class Chat : MonoBehaviour
         // create a JSON object from input field input
         JSONInformation publishMessage = new JSONInformation();
         publishMessage.username = Player.Username;
-        publishMessage.text = chatInput.text;
+
+        //Check for potential profanity. Replace profanity with "*".
+        string checkProfanity = ProfanityFilter.ReplaceProfanity(chatInput.text);
+
+        publishMessage.text = checkProfanity;
      
         string publishMessageToJSON = JsonUtility.ToJson(publishMessage);
 
