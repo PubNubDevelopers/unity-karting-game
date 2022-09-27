@@ -23,4 +23,5 @@
     public const string PUBNUB_PUBLISH_KEY                  = "PUBLISH_KEY_HERE";
     public const string PUBNUB_SUBSCRIBE_KEY                = "SUBSCRIBE_KEY_HERE";
     public const string AVATAR_API_KEY                      = ""; //Necessary if users want a higher API Limit for unauthenticated users.
+    public const string PROFANITY_FILE_LOCATION             = "https://raw.githubusercontent.com/PubNubDevelopers/unity-karting-game/leaderboard-chat/Data/profanity.txt";
 }
