@@ -50,7 +50,7 @@ If you would like to build, run, and expand upon this application yourself, plea
 13. Save the Publish and Subscribe Keys.
 
 ### Set-up Leaderboard Function
-The leaderboard entries (username and time) are stored, sorted, and sent back to users using PubNub's Functions feature. Set this up by:
+The leaderboard entries (username and time) are stored, sorted, and sent back to users using the Functions feature. Set this up by:
 1. Click on the Functions tab on the left hand side of the portal.
 2. Select your App where you would like to enable the Module.
 3. Click on Create New Module.
