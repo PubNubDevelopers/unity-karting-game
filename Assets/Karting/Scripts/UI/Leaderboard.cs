@@ -29,7 +29,7 @@ public class Leaderboard : MonoBehaviour
     private PubNub pubnub = PubNubConnection.pubnub;
     private Button submitTime;
 
-    private void Awake()
+    private async void Awake()
     {
         //Seting-up Game Objects.
         submitTime = GameObject.Find("TimeSubmitButton").GetComponent<Button>();
@@ -46,7 +46,13 @@ public class Leaderboard : MonoBehaviour
         pnConfiguration.LogVerbosity = PNLogVerbosity.BODY;
         PubNubConnection.pubnub = new PubNub(pnConfiguration);
         pubnub = PubNubConnection.pubnub;
-       
+
+        var token = await new PubNubAccessManager().RequestToken(PubNubConnection.UserID);
+        if (token != null)
+        {
+            pubnub.SetToken(token);
+        }
+
         //Leaderboard
         MyClass fireRefreshObject = new MyClass();
         fireRefreshObject.refresh = "new user refresh";

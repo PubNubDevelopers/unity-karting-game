@@ -197,7 +197,7 @@ public class GameFlowManager : MonoBehaviour
         }
     }
     
-    void InitializePubNub()
+    async void InitializePubNub()
     {
         // Use this for initialization
         if (pubnub == null)
@@ -210,6 +210,12 @@ public class GameFlowManager : MonoBehaviour
             pnConfiguration.LogVerbosity = PNLogVerbosity.BODY;
             PubNubConnection.pubnub = new PubNub(pnConfiguration);
             pubnub = PubNubConnection.pubnub;
+
+            var token = await new PubNubAccessManager().RequestToken(PubNubConnection.UserID);
+            if (token != null)
+            {
+                pubnub.SetToken(token);
+            }
         }
     }  
 }

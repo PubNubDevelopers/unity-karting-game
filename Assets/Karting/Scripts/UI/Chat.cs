@@ -7,6 +7,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using System.Text;
 using PubNubAPI;
 using TMPro;
 using UnityEngine;
@@ -37,7 +39,7 @@ public class Chat : MonoBehaviour
     //Avatars by Multiavatar: https://multiavatar.com/
     string profileGenerator = $"https://api.multiavatar.com/";
 
-    private void Awake()
+    private async void Awake()
     {         
         //Setting Objects.
         chatCanvas = GameObject.Find("Chat").GetComponent<Canvas>().transform;
@@ -58,7 +60,13 @@ public class Chat : MonoBehaviour
         pnConfiguration.LogVerbosity = PNLogVerbosity.BODY;
         PubNubConnection.pubnub = new PubNub(pnConfiguration);
         pubnub = PubNubConnection.pubnub;
-     
+
+        var token = await new PubNubAccessManager().RequestToken(PubNubConnection.UserID);
+        if (token != null)
+        {
+            pubnub.SetToken(token);
+        }
+
         // Fetch the maxMessagesToDisplay messages sent on the given PubNub channel
         pubnub.FetchMessages()
             .Channels(new List<string> { channel })
