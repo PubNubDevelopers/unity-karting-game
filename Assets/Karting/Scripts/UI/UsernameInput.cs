@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +13,9 @@ public class UsernameInput : MonoBehaviour
 {
     private TMPro.TMP_InputField usernameInput;
     private Button startButton;
+  
+    [DllImport("__Internal")]
+    private static extern void CompleteAction(string str);
 
     // Start is called before the first frame update
     void Start()
@@ -41,6 +45,8 @@ public class UsernameInput : MonoBehaviour
             //Check for potential profanity. Replace profanity with "*".
             usernameInput.text = ProfanityFilter.ReplaceProfanity(usernameInput.text);
             Player.Username = usernameInput.text;
+
+            CompleteAction("Enter your username");
         }
-    }
+    }  
 }

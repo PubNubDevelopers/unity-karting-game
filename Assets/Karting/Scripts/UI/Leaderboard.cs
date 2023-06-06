@@ -13,6 +13,7 @@ using PubNubAPI;
 using Newtonsoft.Json;
 using System.Linq;
 using System;
+using System.Runtime.InteropServices;
 
 //Helper Class Used to Store Information when passing in the PubNub Network.
 public class MyClass
@@ -28,6 +29,9 @@ public class Leaderboard : MonoBehaviour
     private Transform leaderboardEntry;
     private PubNub pubnub = PubNubConnection.pubnub;
     private Button submitTime;
+
+    [DllImport("__Internal")]
+    private static extern void CompleteAction(string str);
 
     private void Awake()
     {
@@ -143,5 +147,7 @@ public class Leaderboard : MonoBehaviour
                 }
             });
         submitTime.interactable = false; // Only allow submit time once.
+
+        CompleteAction("Submit your time");
     }
 }

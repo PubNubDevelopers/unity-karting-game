@@ -5,6 +5,7 @@ using KartGame.KartSystems;
 using UnityEngine.SceneManagement;
 using System;
 using PubNubAPI;
+using System.Runtime.InteropServices;
 
 public enum GameState{Play, Won, Lost}
 
@@ -52,10 +53,12 @@ public class GameFlowManager : MonoBehaviour
     string m_SceneToLoad;
     float elapsedTimeBeforeEndScene = 0;
 
-    
+    [DllImport("__Internal")]
+    private static extern void CompleteAction(string str);
 
     void Start()
     {
+        CompleteAction("Start Racing!");
         InitializePubNub();
         if (autoFindKarts)
         {

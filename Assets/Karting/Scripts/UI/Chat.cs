@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
+using System.Runtime.InteropServices;
 using PubNubAPI;
 using TMPro;
 using UnityEngine;
@@ -36,6 +37,9 @@ public class Chat : MonoBehaviour
 
     //Avatars by Multiavatar: https://multiavatar.com/
     string profileGenerator = $"https://api.multiavatar.com/";
+
+    [DllImport("__Internal")]
+    private static extern void CompleteAction(string str);
 
     private void Awake()
     {         
@@ -168,6 +172,8 @@ public class Chat : MonoBehaviour
             });
         //Reset chat input.
         chatInput.text = "";
+
+        CompleteAction("Send the lobby chat");
     }
 
     //Obtains the Specific object in the Hierarchy given the Parent Transform and Childname.
