@@ -29,6 +29,7 @@ If you would like to build, run, and expand upon this application yourself, plea
 - [Git](https://www.atlassian.com/git/tutorials/install-git)
 - [Visual Studio](https://visualstudio.microsoft.com/vs/community/)
 - [PubNub Account](#pubnub-account) (*Free*)
+- [UI Art Package from Unity Asset Store](https://assetstore.unity.com/packages/2d/gui/icons/2d-casual-ui-hd-82080)
 
 <a href="https://dashboard.pubnub.com/signup">
 	<img alt="PubNub Signup" src="https://i.imgur.com/og5DDjf.png" width=260 height=97/>
@@ -151,12 +152,13 @@ export default (request) => {
   
 3. Open the project in Unity.
 4. In Assets > Karting > Scripts > GameConstants, replace your publish and subscribe keys with the PUBNUB_PUBLIC_KEY and PUBNUB_SUBSCRIBE_KEY constants at the bottom of the file.
-5. Run the game by File > Builds Settings > Build & Run.
-6. Enter a username. Press the play button.
-7. Play the game by controlling the kart with WASD or with the arrow keys.
-8. Once you've won the game, submit your score by clicking on the submit time button.
-9. View leaderboard updates in real-time.
-10. Chat with others in the lobby chat.
+5. Import the 2D Casual UI HD Art UI Package described in the pre-requisites earlier. You can either do this by clicking on "Open in Unity" in the asset store and importing the package in your application or by searching for the package in Unity via Window > Package Manager > My Assets > Select the asset and import.
+6. Run the game by File > Builds Settings > Build & Run.
+7. Enter a username. Press the play button.
+8. Play the game by controlling the kart with WASD or with the arrow keys.
+9. Once you've won the game, submit your score by clicking on the submit time button.
+10. View leaderboard updates in real-time.
+11. Chat with others in the lobby chat.
 
 ## Links
 - Demo Link: https://www.pubnub.com/demos/unity-pubnubprix/
