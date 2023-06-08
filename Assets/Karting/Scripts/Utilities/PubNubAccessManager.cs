@@ -1,49 +1,64 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using UnityEngine;
+using UnityEngine.Networking;
+
+public class PubNubAccessManagerResponseToken
+{
+    public string Token { get; set; }
+    public int TTL { get; set; }
+}
+
+public class PubNubAccessManagerResponse
+{
+    public PubNubAccessManagerResponseToken Body { get; set; }
+}
 
 public class PubNubAccessManager
 {
-    private static readonly HttpClient client = new HttpClient();
-
     public PubNubAccessManager()
-	{
-	}
+    {
+    }
 
-	public async Task<string> RequestToken(string UserId)
-	{
-        try
-        {
-            string TOKEN_SERVER = "https://devrel-demos-access-manager.netlify.app/.netlify/functions/api/unitykartracer";
-            var values = new Dictionary<string, string>
+    public IEnumerator RequestToken(string UserId, Action<string> callback)
+    {
+        string TOKEN_SERVER = "https://devrel-demos-access-manager.netlify.app/.netlify/functions/api/unitykartracer";
+        var values = new Dictionary<string, string>
             {
                 {
                     "UUID", UserId
                 }
             };
-            var content = new StringContent(JsonConvert.SerializeObject(values), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(TOKEN_SERVER + "/grant", content);
-            if (response.StatusCode == HttpStatusCode.OK)
+        var json = JsonConvert.SerializeObject(values);
+        var bytes = Encoding.UTF8.GetBytes(json);
+        using (var webRequest = new UnityWebRequest(TOKEN_SERVER + "/grant", "POST"))
+        {
+            webRequest.uploadHandler = new UploadHandlerRaw(bytes);
+            webRequest.downloadHandler = new DownloadHandlerBuffer();
+            webRequest.SetRequestHeader("accept", "application/json");
+            webRequest.SetRequestHeader("Content-Type", "application/json");
+            yield return webRequest.SendWebRequest();
+
+            if (webRequest.result == UnityWebRequest.Result.ConnectionError)
             {
-                var responseString = await response.Content.ReadAsStringAsync();
-                dynamic responseDynamic = JsonConvert.DeserializeObject<dynamic>(responseString);
-                var body = responseDynamic.body;
-                var token = responseDynamic.body.token;
-                return Convert.ToString(token);
+                callback(null);
+            }
+            else
+            {
+                try
+                {
+                    PubNubAccessManagerResponse responseBody = JsonConvert.DeserializeObject<PubNubAccessManagerResponse>(webRequest.downloadHandler.text);
+                    string token = responseBody.Body.Token;
+                    callback(token);
+                }
+                catch (Exception)
+                {
+                    callback(null);
+                }
             }
         }
-        catch (Exception e)
-        {
-            Debug.Log("Error setting Access manager token for DevRel demo");
-            Debug.Log(e);
-            return null;
-        }
-        return null;
     }
 }
 

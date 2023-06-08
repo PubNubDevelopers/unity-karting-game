@@ -30,10 +30,12 @@ public class Leaderboard : MonoBehaviour
     private PubNub pubnub = PubNubConnection.pubnub;
     private Button submitTime;
 
+#if UNITY_WEBGL
     [DllImport("__Internal")]
     private static extern void CompleteAction(string str);
+#endif
 
-    private async void Awake()
+    private void Awake()
     {
         //Seting-up Game Objects.
         submitTime = GameObject.Find("TimeSubmitButton").GetComponent<Button>();
@@ -51,12 +53,19 @@ public class Leaderboard : MonoBehaviour
         PubNubConnection.pubnub = new PubNub(pnConfiguration);
         pubnub = PubNubConnection.pubnub;
 
-        var token = await new PubNubAccessManager().RequestToken(PubNubConnection.UserID);
-        if (token != null)
+        StartCoroutine(new PubNubAccessManager().RequestToken(PubNubConnection.UserID, (token) =>
         {
-            pubnub.SetToken(token);
-        }
+            if (token != null)
+            {
+                pubnub.SetToken(token);
+            }
+            AccessManagerComplete();
+        }));
 
+    }
+
+    private void AccessManagerComplete()
+    {
         //Leaderboard
         MyClass fireRefreshObject = new MyClass();
         fireRefreshObject.refresh = "new user refresh";
@@ -153,7 +162,8 @@ public class Leaderboard : MonoBehaviour
                 }
             });
         submitTime.interactable = false; // Only allow submit time once.
-
+#if UNITY_WEBGL
         CompleteAction("Submit your time");
+#endif
     }
 }

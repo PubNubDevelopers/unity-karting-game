@@ -53,12 +53,16 @@ public class GameFlowManager : MonoBehaviour
     string m_SceneToLoad;
     float elapsedTimeBeforeEndScene = 0;
 
+#if UNITY_WEBGL
     [DllImport("__Internal")]
     private static extern void CompleteAction(string str);
+#endif
 
     void Start()
     {
+#if UNITY_WEBGL
         CompleteAction("Start Racing!");
+#endif
         InitializePubNub();
         if (autoFindKarts)
         {
@@ -200,7 +204,7 @@ public class GameFlowManager : MonoBehaviour
         }
     }
     
-    async void InitializePubNub()
+    void InitializePubNub()
     {
         // Use this for initialization
         if (pubnub == null)
@@ -214,11 +218,13 @@ public class GameFlowManager : MonoBehaviour
             PubNubConnection.pubnub = new PubNub(pnConfiguration);
             pubnub = PubNubConnection.pubnub;
 
-            var token = await new PubNubAccessManager().RequestToken(PubNubConnection.UserID);
-            if (token != null)
+            StartCoroutine(new PubNubAccessManager().RequestToken(PubNubConnection.UserID, (token) =>
             {
-                pubnub.SetToken(token);
-            }
+                if (token != null)
+                {
+                    pubnub.SetToken(token);
+                }
+            }));
         }
     }  
 }

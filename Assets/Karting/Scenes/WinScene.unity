@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.12731704, g: 0.13414726, b: 0.1210787, a: 1}
+  m_IndirectSpecularColor: {r: 0.12731689, g: 0.13414702, b: 0.1210784, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1462,7 +1462,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 257.74, y: -3.4033508}
+  m_AnchoredPosition: {x: 257.74, y: -3.4033203}
   m_SizeDelta: {x: -580.52, y: -170.75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &218399283
@@ -1474,7 +1474,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 218399281}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a55ce787db3cc4cd78bdfddf4652bd7e, type: 3}
+  m_Script: {fileID: 11500000, guid: 8e05ebade75c34e1a9d9ec0a388a106d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &218399284
@@ -4424,7 +4424,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 435420345}
   m_HandleRect: {fileID: 435420344}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -5379,7 +5379,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 133, y: 23.072}
+  m_AnchoredPosition: {x: 133, y: 23.072021}
   m_SizeDelta: {x: 227.01, y: 42.501}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &986130590
@@ -6665,7 +6665,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1547798679}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1547798676}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1547798679
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9407,6 +9419,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2075927887}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea0d32357e4a247ceaf3a84586c83fbc, type: 3}
+  m_Script: {fileID: 11500000, guid: d6216439de12c4cfda19e7601eb5ecbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

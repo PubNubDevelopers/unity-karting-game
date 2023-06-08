@@ -13,9 +13,11 @@ public class UsernameInput : MonoBehaviour
 {
     private TMPro.TMP_InputField usernameInput;
     private Button startButton;
-  
+
+#if UNITY_WEBGL
     [DllImport("__Internal")]
     private static extern void CompleteAction(string str);
+#endif
 
     // Start is called before the first frame update
     void Start()
@@ -45,8 +47,9 @@ public class UsernameInput : MonoBehaviour
             //Check for potential profanity. Replace profanity with "*".
             usernameInput.text = ProfanityFilter.ReplaceProfanity(usernameInput.text);
             Player.Username = usernameInput.text;
-
+#if UNITY_WEBGL
             CompleteAction("Enter your username");
+#endif
         }
     }  
 }

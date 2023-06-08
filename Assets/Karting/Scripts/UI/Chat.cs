@@ -40,11 +40,13 @@ public class Chat : MonoBehaviour
     //Avatars by Multiavatar: https://multiavatar.com/
     string profileGenerator = $"https://api.multiavatar.com/";
 
+#if UNITY_WEBGL
     [DllImport("__Internal")]
     private static extern void CompleteAction(string str);
+#endif
 
-    private async void Awake()
-    {         
+    private void Awake()
+    {
         //Setting Objects.
         chatCanvas = GameObject.Find("Chat").GetComponent<Canvas>().transform;
         chatInput = chatCanvas.Find("ChatInput").GetComponent<TMPro.TMP_InputField>();
@@ -53,7 +55,7 @@ public class Chat : MonoBehaviour
         chatContainer.gameObject.SetActive(false); //Used as a template to create the other entries.
         chatBtn = chatCanvas.Find("SendChatButton").GetComponent<Button>();
         chatBtn.onClick.AddListener(SendChat);
-        
+
 
         //Initialize PubNub Object
         PNConfiguration pnConfiguration = new PNConfiguration();
@@ -65,11 +67,18 @@ public class Chat : MonoBehaviour
         PubNubConnection.pubnub = new PubNub(pnConfiguration);
         pubnub = PubNubConnection.pubnub;
 
-        var token = await new PubNubAccessManager().RequestToken(PubNubConnection.UserID);
-        if (token != null)
+        StartCoroutine(new PubNubAccessManager().RequestToken(PubNubConnection.UserID, (token) =>
         {
-            pubnub.SetToken(token);
-        }
+            if (token != null)
+            {
+                pubnub.SetToken(token);
+            }
+            AccessManagerComplete();
+        }));
+    }
+
+    private void AccessManagerComplete()
+    {
 
         // Fetch the maxMessagesToDisplay messages sent on the given PubNub channel
         pubnub.FetchMessages()
@@ -132,8 +141,8 @@ public class Chat : MonoBehaviour
             .Execute();
     }
 
-    // Create new chat objects based of the data received from PubNub
-    void CreateChat(JSONInformation payLoad)
+// Create new chat objects based of the data received from PubNub
+void CreateChat(JSONInformation payLoad)
     {
         //Create new chat entry in the lobby chat.
         Transform duplciateContainer = Instantiate(chatContainer, chatScrollContent);
@@ -181,7 +190,9 @@ public class Chat : MonoBehaviour
         //Reset chat input.
         chatInput.text = "";
 
+#if UNITY_WEBGL
         CompleteAction("Send the lobby chat");
+#endif
     }
 
     //Obtains the Specific object in the Hierarchy given the Parent Transform and Childname.
