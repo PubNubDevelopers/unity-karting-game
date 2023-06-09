@@ -30,8 +30,10 @@ public class Leaderboard : MonoBehaviour
     private PubNub pubnub = PubNubConnection.pubnub;
     private Button submitTime;
 
+#if UNITY_WEBGL
     [DllImport("__Internal")]
     private static extern void CompleteAction(string str);
+#endif
 
     private void Awake()
     {
@@ -50,7 +52,20 @@ public class Leaderboard : MonoBehaviour
         pnConfiguration.LogVerbosity = PNLogVerbosity.BODY;
         PubNubConnection.pubnub = new PubNub(pnConfiguration);
         pubnub = PubNubConnection.pubnub;
-       
+
+        StartCoroutine(new PubNubAccessManager().RequestToken(PubNubConnection.UserID, (token) =>
+        {
+            if (token != null)
+            {
+                pubnub.SetToken(token);
+            }
+            AccessManagerComplete();
+        }));
+
+    }
+
+    private void AccessManagerComplete()
+    {
         //Leaderboard
         MyClass fireRefreshObject = new MyClass();
         fireRefreshObject.refresh = "new user refresh";
@@ -147,7 +162,8 @@ public class Leaderboard : MonoBehaviour
                 }
             });
         submitTime.interactable = false; // Only allow submit time once.
-
+#if UNITY_WEBGL
         CompleteAction("Submit your time");
+#endif
     }
 }
