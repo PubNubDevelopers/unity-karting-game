@@ -31,7 +31,7 @@ If you would like to build, run, and expand upon this application yourself, plea
 - [PubNub Account](#pubnub-account) (*Free*)
 - [UI Art Package from Unity Asset Store](https://assetstore.unity.com/packages/2d/gui/icons/2d-casual-ui-hd-82080)
 
-<a href="https://dashboard.pubnub.com/signup">
+<a href="https://admin.pubnub.com/register">
 	<img alt="PubNub Signup" src="https://i.imgur.com/og5DDjf.png" width=260 height=97/>
 </a>
 
