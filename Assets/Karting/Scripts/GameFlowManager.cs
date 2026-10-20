@@ -4,7 +4,8 @@ using UnityEngine.Playables;
 using KartGame.KartSystems;
 using UnityEngine.SceneManagement;
 using System;
-using PubNubAPI;
+using PubnubApi;
+using PubnubApi.Unity;
 using System.Runtime.InteropServices;
 
 public enum GameState{Play, Won, Lost}
@@ -44,7 +45,7 @@ public class GameFlowManager : MonoBehaviour
     public bool autoFindKarts = true;
     public ArcadeKart playerKart;
 
-    private PubNub pubnub = PubNubConnection.pubnub;
+    private Pubnub pubnub = PubNubConnection.pubnub;
 
     ArcadeKart[] karts;
     ObjectiveManager m_ObjectiveManager;
@@ -209,20 +210,20 @@ public class GameFlowManager : MonoBehaviour
         // Use this for initialization
         if (pubnub == null)
         {
-            PNConfiguration pnConfiguration = new PNConfiguration();
+            PubNubConnection.UserID = SystemInfo.deviceUniqueIdentifier;
+            PNConfiguration pnConfiguration = new PNConfiguration(new UserId(PubNubConnection.UserID));
             pnConfiguration.PublishKey = PubNubConnection.PublishKey;
             pnConfiguration.SubscribeKey = PubNubConnection.SubscribeKey;
-            PubNubConnection.UserID = SystemInfo.deviceUniqueIdentifier;
-            pnConfiguration.UserId = PubNubConnection.UserID;
-            pnConfiguration.LogVerbosity = PNLogVerbosity.BODY;
-            PubNubConnection.pubnub = new PubNub(pnConfiguration);
+            pnConfiguration.LogLevel = PubnubLogLevel.Debug;
+            pnConfiguration.EnableHttp2 = false; //HTTP/2 transport requires Unity 6.5+.
+            PubNubConnection.pubnub = PubnubUnityUtils.NewUnityPubnub(pnConfiguration, webGLBuildMode: Application.platform == RuntimePlatform.WebGLPlayer, unityLogging: true);
             pubnub = PubNubConnection.pubnub;
 
             StartCoroutine(new PubNubAccessManager().RequestToken(PubNubConnection.UserID, (token) =>
             {
                 if (token != null)
                 {
-                    pubnub.SetToken(token);
+                    pubnub.SetAuthToken(token);
                 }
             }));
         }

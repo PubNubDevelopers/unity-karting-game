@@ -10,7 +10,8 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Net.Http;
 using System.Text;
-using PubNubAPI;
+using PubnubApi;
+using PubnubApi.Unity;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -27,7 +28,8 @@ public class JSONInformation
 public class Chat : MonoBehaviour
 {    
     ushort maxMessagesToDisplay = 10; //Initial Load-in of messages when first logging into network.
-    private PubNub pubnub = PubNubConnection.pubnub;
+    private Pubnub pubnub = PubNubConnection.pubnub;
+    private SubscribeCallbackListener listener = new SubscribeCallbackListener();
     string channel = "chatchannel";
 
     //GameObjects
@@ -58,20 +60,20 @@ public class Chat : MonoBehaviour
 
 
         //Initialize PubNub Object
-        PNConfiguration pnConfiguration = new PNConfiguration();
+        PubNubConnection.UserID = SystemInfo.deviceUniqueIdentifier;
+        PNConfiguration pnConfiguration = new PNConfiguration(new UserId(PubNubConnection.UserID));
         pnConfiguration.PublishKey = PubNubConnection.PublishKey;
         pnConfiguration.SubscribeKey = PubNubConnection.SubscribeKey;
-        PubNubConnection.UserID = SystemInfo.deviceUniqueIdentifier;
-        pnConfiguration.UserId = PubNubConnection.UserID;
-        pnConfiguration.LogVerbosity = PNLogVerbosity.BODY;
-        PubNubConnection.pubnub = new PubNub(pnConfiguration);
+        pnConfiguration.LogLevel = PubnubLogLevel.Debug;
+        pnConfiguration.EnableHttp2 = false; //HTTP/2 transport requires Unity 6.5+.
+        PubNubConnection.pubnub = PubnubUnityUtils.NewUnityPubnub(pnConfiguration, webGLBuildMode: Application.platform == RuntimePlatform.WebGLPlayer, unityLogging: true);
         pubnub = PubNubConnection.pubnub;
 
         StartCoroutine(new PubNubAccessManager().RequestToken(PubNubConnection.UserID, (token) =>
         {
             if (token != null)
             {
-                pubnub.SetToken(token);
+                pubnub.SetAuthToken(token);
             }
             AccessManagerComplete();
         }));
@@ -81,10 +83,10 @@ public class Chat : MonoBehaviour
     {
 
         // Fetch the maxMessagesToDisplay messages sent on the given PubNub channel
-        pubnub.FetchMessages()
+        pubnub.FetchHistory()
             .Channels(new List<string> { channel })
-            .Count(maxMessagesToDisplay)
-            .Async((result, status) =>
+            .MaximumPerChannel(maxMessagesToDisplay)
+            .Execute((result, status) =>
             {
                 if (status.Error)
                 {
@@ -93,14 +95,14 @@ public class Chat : MonoBehaviour
                         status.StatusCode, status.ErrorData, status.Category
                     ));
                 }
-                else
+                else if (result.Messages != null) //Messages is null when the channel has no stored messages.
                 {
-                    foreach (KeyValuePair<string, List<PNMessageResult>> kvp in result.Channels)
+                    foreach (KeyValuePair<string, List<PNHistoryItemResult>> kvp in result.Messages)
                     {
-                        foreach (PNMessageResult pnMessageResult in kvp.Value)
+                        foreach (PNHistoryItemResult pnMessageResult in kvp.Value)
                         {
                             // Format data into readable format
-                            JSONInformation chatmessage = JsonUtility.FromJson<JSONInformation>(pnMessageResult.Payload.ToString());
+                            JSONInformation chatmessage = JsonUtility.FromJson<JSONInformation>(pnMessageResult.Entry.ToString());
 
                             // Call the function to display the message in plain text
                             CreateChat(chatmessage);
@@ -110,35 +112,39 @@ public class Chat : MonoBehaviour
             });
 
         //Listen for any incoming messages on PubNub Network on channel. Receives any messages from other users and adds to lobby chat.
-        pubnub.SubscribeCallback += (sender, e) => {
-            SubscribeEventEventArgs mea = e as SubscribeEventEventArgs;
-            if (mea.Status != null)
-            {
-                Debug.Log(string.Format(
-                       " Subscribe Listening Error: {0} {1} {2}",
-                       mea.Status.StatusCode, mea.Status.ErrorData, mea.Status.Category
-                   ));
-            }
-            if (mea.MessageResult != null)
-            {
-                // Format data into a readable format
-                JSONInformation chatmessage = JsonUtility.FromJson<JSONInformation>(mea.MessageResult.Payload.ToString());
-
-                // Call the function to display the message in plain text
-                CreateChat(chatmessage);
-            }
-
-            if (mea.PresenceEventResult != null)
-            {
-                Debug.Log("In Example, SubscribeCallback in presence" + mea.PresenceEventResult.Channel + mea.PresenceEventResult.Occupancy + mea.PresenceEventResult.Event);
-            }
+        listener.onStatus += (pn, status) => {
+            Debug.Log(string.Format(
+                   " Subscribe Listening Error: {0} {1} {2}",
+                   status.StatusCode, status.ErrorData, status.Category
+               ));
         };
-        pubnub.Subscribe()
-            .Channels(new List<string>() {
+        listener.onMessage += (pn, messageResult) => {
+            // Format data into a readable format
+            JSONInformation chatmessage = JsonUtility.FromJson<JSONInformation>(messageResult.Message.ToString());
+
+            // Call the function to display the message in plain text
+            CreateChat(chatmessage);
+        };
+        listener.onPresence += (pn, presenceEventResult) => {
+            Debug.Log("In Example, SubscribeCallback in presence" + presenceEventResult.Channel + presenceEventResult.Occupancy + presenceEventResult.Event);
+        };
+        pubnub.AddListener(listener);
+        pubnub.Subscribe<object>()
+            .Channels(new string[] {
                 channel
             })
             .WithPresence()
             .Execute();
+    }
+
+    //PubNub instances now outlive the scene, so stop listening when the lobby chat is destroyed.
+    private void OnDestroy()
+    {
+        if (pubnub != null)
+        {
+            pubnub.RemoveListener(listener);
+            pubnub.UnsubscribeAll<object>();
+        }
     }
 
 // Create new chat objects based of the data received from PubNub
@@ -175,12 +181,12 @@ void CreateChat(JSONInformation payLoad)
         pubnub.Publish()
             .Channel(channel)
             .Message(publishMessageToJSON)
-            .Async((result, status) =>
+            .Execute((result, status) =>
             {
                 if (status.Error)
                 {
                     Debug.Log(status.Error);
-                    Debug.Log(status.ErrorData.Info);
+                    Debug.Log(status.ErrorData.Information);
                 }
                 else
                 {

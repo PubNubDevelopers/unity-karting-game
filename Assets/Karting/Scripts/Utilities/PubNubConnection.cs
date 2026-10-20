@@ -5,13 +5,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using PubNubAPI;
+using PubnubApi;
 
 public static class PubNubConnection
 {
     //Persist the PubNub object across scenes
     private static string _userID;
-    public static PubNub pubnub;
+    public static Pubnub pubnub;
 
     public static string PublishKey
     {
