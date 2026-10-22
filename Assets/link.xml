@@ -1,0 +1,5 @@
+<linker>
+    <!-- PubNub Unity SDK uses reflection for JSON (de)serialization; keep it from being stripped in WebGL (IL2CPP) builds. -->
+    <assembly fullname="PubnubApiUnity" preserve="all"/>
+    <assembly fullname="PubNubAPI" preserve="all"/>
+</linker>

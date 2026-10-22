@@ -9,8 +9,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using PubNubAPI;
+using PubnubApi;
+using PubnubApi.Unity;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Linq;
 using System;
 using System.Runtime.InteropServices;
@@ -27,7 +29,8 @@ public class Leaderboard : MonoBehaviour
 { 
     private Transform leaderboardContainer;
     private Transform leaderboardEntry;
-    private PubNub pubnub = PubNubConnection.pubnub;
+    private Pubnub pubnub = PubNubConnection.pubnub;
+    private SubscribeCallbackListener listener = new SubscribeCallbackListener();
     private Button submitTime;
 
 #if UNITY_WEBGL
@@ -44,20 +47,20 @@ public class Leaderboard : MonoBehaviour
         GameObject.Find("PlayerTimeText").GetComponent<TMPro.TextMeshProUGUI>().text = $"{Player.Score.ToString()}s";
 
         //Re-Initializing due to Fire() method not being fired unless PubNub object reinitialized.
-        PNConfiguration pnConfiguration = new PNConfiguration();
+        PubNubConnection.UserID = SystemInfo.deviceUniqueIdentifier;
+        PNConfiguration pnConfiguration = new PNConfiguration(new UserId(PubNubConnection.UserID));
         pnConfiguration.PublishKey = PubNubConnection.PublishKey;
         pnConfiguration.SubscribeKey = PubNubConnection.SubscribeKey;
-        PubNubConnection.UserID = SystemInfo.deviceUniqueIdentifier;
-        pnConfiguration.UserId = PubNubConnection.UserID;
-        pnConfiguration.LogVerbosity = PNLogVerbosity.BODY;
-        PubNubConnection.pubnub = new PubNub(pnConfiguration);
+        pnConfiguration.LogLevel = PubnubLogLevel.Debug;
+        pnConfiguration.EnableHttp2 = false; //HTTP/2 transport requires Unity 6.5+.
+        PubNubConnection.pubnub = PubnubUnityUtils.NewUnityPubnub(pnConfiguration, webGLBuildMode: Application.platform == RuntimePlatform.WebGLPlayer, unityLogging: true);
         pubnub = PubNubConnection.pubnub;
 
         StartCoroutine(new PubNubAccessManager().RequestToken(PubNubConnection.UserID, (token) =>
         {
             if (token != null)
             {
-                pubnub.SetToken(token);
+                pubnub.SetAuthToken(token);
             }
             AccessManagerComplete();
         }));
@@ -75,11 +78,11 @@ public class Leaderboard : MonoBehaviour
         pubnub.Fire() 
             .Channel("submit_score")
             .Message(firerefreshobject)
-            .Async((result, status) => {
+            .Execute((result, status) => {
                 if (status.Error)
                 {
                     Debug.Log(status.Error);
-                    Debug.Log(status.ErrorData.Info);
+                    Debug.Log(status.ErrorData.Information);
                 }
                 else
                 {
@@ -88,21 +91,22 @@ public class Leaderboard : MonoBehaviour
             });
 
         //Listens for any incoming PubNub messages. Used to update the Leaderboard.
-        pubnub.SubscribeCallback += (sender, e) => {
-            SubscribeEventEventArgs mea = e as SubscribeEventEventArgs;
-            if (mea.Status != null)
+        listener.onStatus += (pn, status) => {
+            Debug.Log(string.Format(
+                    " FetchMessages Error: {0} {1} {2}",
+                    status.StatusCode, status.ErrorData, status.Category
+                ));
+        };
+        listener.onMessage += (pn, messageResult) => {
             {
-                Debug.Log(string.Format(
-                        " FetchMessages Error: {0} {1} {2}",
-                        mea.Status.StatusCode, mea.Status.ErrorData, mea.Status.Category
-                    ));
-            }
-            if (mea.MessageResult != null)
-            {             
-                //Creating arrays from a dictionary containing the payload in order to parse data easier.
-                Dictionary<string, object> msg = mea.MessageResult.Payload as Dictionary<string, object>;
-                string[] strArr = msg["username"] as string[];
-                string[] strScores = msg["score"] as string[];
+                //Creating arrays from the JSON object containing the payload in order to parse data easier.
+                JObject msg = messageResult.Message as JObject;
+                if (msg == null)
+                {
+                    return;
+                }
+                string[] strArr = msg["username"].Select(item => (string)item).ToArray();
+                string[] strScores = msg["score"].Select(item => (string)item).ToArray();
 
                 //float templateHeight = 20f;
                 for (int i = 0; i < strArr.Length; i++)
@@ -123,20 +127,29 @@ public class Leaderboard : MonoBehaviour
                     leaderboardEntry.Find("EntryTimeText").GetComponent<TMPro.TextMeshProUGUI>().text = strScores[i] + "s";
                 }               
             }
-
-            if (mea.PresenceEventResult != null)
-            {
-                Debug.Log("In Example, SusbcribeCallback in presence" + mea.PresenceEventResult.Channel + mea.PresenceEventResult.Occupancy + mea.PresenceEventResult.Event);
-            }
         };
+        listener.onPresence += (pn, presenceEventResult) => {
+            Debug.Log("In Example, SusbcribeCallback in presence" + presenceEventResult.Channel + presenceEventResult.Occupancy + presenceEventResult.Event);
+        };
+        pubnub.AddListener(listener);
 
         //Subscribes to the specified channel on the PubNub network to receive information.
-        pubnub.Subscribe()
-            .Channels(new List<string>() {
+        pubnub.Subscribe<object>()
+            .Channels(new string[] {
                 "leaderboard_scores"
             })
             .WithPresence()
             .Execute();     
+    }
+
+    //PubNub instances now outlive the scene, so stop listening when the leaderboard is destroyed.
+    private void OnDestroy()
+    {
+        if (pubnub != null)
+        {
+            pubnub.RemoveListener(listener);
+            pubnub.UnsubscribeAll<object>();
+        }
     }
 
     //Submits the time for the entered user in the PubNub Network.
@@ -150,7 +163,7 @@ public class Leaderboard : MonoBehaviour
         pubnub.Publish()
             .Channel("submit_score")
             .Message(json)
-            .Async((result, status) => {
+            .Execute((result, status) => {
                 if (!status.Error)
                 {
                     Debug.Log(string.Format("Publish Timetoken: {0}", result.Timetoken));
@@ -158,7 +171,7 @@ public class Leaderboard : MonoBehaviour
                 else
                 {
                     Debug.Log(status.Error);
-                    Debug.Log(status.ErrorData.Info);
+                    Debug.Log(status.ErrorData.Information);
                 }
             });
         submitTime.interactable = false; // Only allow submit time once.

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.pubnub.sdk": "https://github.com/pubnub/unity.git?path=/PubNubUnity/Assets/PubNub#v10.1.0",
     "com.unity.barracuda": "2.0.0",
     "com.unity.burst": "1.6.6",
     "com.unity.cinemachine": "2.8.6",
